@@ -2,8 +2,8 @@ package netty.configcenter.server;
 
 import io.netty.channel.Channel;
 
-import netty.configcenter.channel.ConfigChannel;
-import netty.configcenter.enums.HeaderEnum;
+import netty.configcenter.channel.ConfigItemChannel;
+import netty.configcenter.common.OpCode;
 import netty.configcenter.model.ConfigItem;
 import netty.configcenter.model.Packet;
 
@@ -21,7 +21,7 @@ public class ChannelManager {
     /**
      * channel列表
      */
-    private ConcurrentHashMap<ConfigItem,Channel> configVoChannelConcurrentHashMap = null;
+    private ConcurrentHashMap<ConfigItem,ConfigItemChannel> configVoChannelConcurrentHashMap = null;
 
     public ChannelManager() {
         configVoChannelConcurrentHashMap = new ConcurrentHashMap<>();
@@ -36,7 +36,7 @@ public class ChannelManager {
      */
     public  void addChannel(ConfigItem configItem, Channel channel) {
 
-        configVoChannelConcurrentHashMap.putIfAbsent(configItem,channel);
+        configVoChannelConcurrentHashMap.putIfAbsent(configItem,new ConfigItemChannel(channel));
 
     }
 
@@ -58,11 +58,11 @@ public class ChannelManager {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    Map.Entry<ConfigItem,Channel>[] entrys = configVoChannelConcurrentHashMap.entrySet().toArray(new Map.Entry[0]);
+                    Map.Entry<ConfigItem,ConfigItemChannel>[] entrys = configVoChannelConcurrentHashMap.entrySet().toArray(new Map.Entry[0]);
 
 
                     if (entrys.length > 0) {
-                        Channel channel = entrys[new Random().nextInt(entrys.length)].getValue();
+                        Channel channel = entrys[new Random().nextInt(entrys.length)].getValue().getChannel();
                         System.out.println("selected:" + channel.toString());
 
                         ConfigItem configItem = new ConfigItem();
@@ -71,10 +71,10 @@ public class ChannelManager {
                         configItem.setSubModule("magina");
                         configItem.setValue("127.0.0.1");
 
-                        Packet packet = Packet.builder().configItem(configItem).header(HeaderEnum.CONFIG_CHANGED.getCode()).build();
+                        Packet packet = Packet.builder().configItem(configItem).header(OpCode.CONFIG_CHANGED).build();
 
                         System.out.println("send packet to client.");
-                        channel.writeAndFlush(packet);
+                       // channel.writeAndFlush(packet);
                         break;
                     }
 

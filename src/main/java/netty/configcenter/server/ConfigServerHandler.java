@@ -17,7 +17,8 @@
 package netty.configcenter.server;
 
 import io.netty.channel.*;
-import netty.configcenter.enums.HeaderEnum;
+import netty.configcenter.common.OpCode;
+import netty.configcenter.model.ConfigItem;
 import netty.configcenter.model.Packet;
 
 public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
@@ -58,13 +59,34 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
 
         Packet packet = (Packet) msg;
 
-        if (packet.getHeader() == HeaderEnum.HEARTBEAT.getCode()) {
-            System.out.println("recevie client heartbeat");
-        } if (packet.getHeader() == HeaderEnum.FIRST_REGISTER.getCode()) {
-            System.out.println("recevie client config");
-            channelManager.addChannel(packet.getConfigItem(),ctx.channel());
+        switch (packet.getHeader()) {
+            case OpCode.HEARTBEAT: {
+                System.out.println(((Packet) msg).getMessage());
+
+                Packet pingPacket = Packet.builder().message("get ping from server.").
+                        header(OpCode.HEARTBEAT).build();
+
+                //System.out.println("send packet to client.");
+                ctx.writeAndFlush(pingPacket);
+                break;
+            }
+            case OpCode.FIRST_REGISTER: {
+
+                //首次注册，将信息返回
+                ConfigItem configItem = new ConfigItem();
+                configItem.setKey("whiteList");
+                configItem.setModule("loan");
+                configItem.setSubModule("magina");
+                configItem.setValue("127.0.0.1");
+
+                Packet sendPacket = Packet.builder().configItem(configItem).header(OpCode.FIRST_REGISTER).build();
+
+                ctx.writeAndFlush(sendPacket);
+
+                channelManager.addChannel(packet.getConfigItem(),ctx.channel());
+            }
         }
-        System.out.println("message from client:" + msg.toString());
+        //System.out.println("message from client:" + msg.toString());
 
         //ctx.writeAndFlush("OK: ");
 

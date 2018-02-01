@@ -17,4 +17,6 @@ public class Packet implements Serializable {
     private  int header;
 
     private ConfigItem configItem;
+
+    private String message;
 }
