@@ -137,8 +137,10 @@ public class ConfigClient {
                 e.printStackTrace();
             }
         }
+        if (configItem != null) {
+            cacheManager.setCache(configItem,configItem.getValue());
+        }
 
-        cacheManager.setCacheIfAbsent(configItem,configItem.getValue());
         return configItem.getValue();
     }
 

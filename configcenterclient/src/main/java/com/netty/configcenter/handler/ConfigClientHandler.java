@@ -93,7 +93,7 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
                             //通知lisenter事件
                             listenerContext.fireMessageChaned(packet.getConfigItem());
                             log.debug("start to set cache." + packet.getConfigItem().getValue());
-                            cacheManager.setCacheIfAbsent(packet.getConfigItem(), packet.getConfigItem().getValue());
+                            cacheManager.setCache(packet.getConfigItem(), packet.getConfigItem().getValue());
                         }
 
                     }

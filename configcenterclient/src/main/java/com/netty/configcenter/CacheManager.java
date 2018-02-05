@@ -21,7 +21,7 @@ public class CacheManager {
         return cache.get(item);
     }
 
-    public void setCacheIfAbsent(ConfigItem item, String value) {
-        cache.putIfAbsent(item, value);
+    public void setCache(ConfigItem item, String value) {
+        cache.put(item, value);
     }
 }
