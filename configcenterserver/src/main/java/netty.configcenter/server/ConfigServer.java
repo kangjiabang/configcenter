@@ -15,6 +15,7 @@
  */
 package netty.configcenter.server;
 
+import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -28,25 +29,37 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Service;
 
 /**
  * Server that accept the path of a file an echo back its content.
  */
+@Slf4j
 @Service
-public  class ConfigServer implements Runnable,InitializingBean {
+public class ConfigServer implements InitializingBean, ApplicationListener<ContextClosedEvent> {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     // Use the same default port with the telnet example so that we can use the telnet client example to access it.
-    static final int PORT = Integer.parseInt(System.getProperty("port", SSL? "8992" : "8023"));
+    static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8992" : "8023"));
 
 
     @Autowired
     private ChannelManager channelManager;
 
-    public  void runServer() throws Exception {
+    private EventLoopGroup bossGroup;
+
+    private EventLoopGroup workerGroup;
+
+    private  Channel channel;
+
+    private ServerBootstrap b;
+
+    public void runServer() throws Exception {
         // Configure SSL.
         final SslContext sslCtx;
         if (SSL) {
@@ -57,61 +70,79 @@ public  class ConfigServer implements Runnable,InitializingBean {
         }
 
         // Configure the server.
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
 
 
         try {
-            ServerBootstrap b = new ServerBootstrap();
+            b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .option(ChannelOption.SO_BACKLOG, 100)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new ChannelInitializer<SocketChannel>() {
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
 
 
-                 @Override
-                 public void initChannel(SocketChannel ch) throws Exception {
-                     ChannelPipeline p = ch.pipeline();
-                     if (sslCtx != null) {
-                         p.addLast(sslCtx.newHandler(ch.alloc()));
-                     }
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            if (sslCtx != null) {
+                                p.addLast(sslCtx.newHandler(ch.alloc()));
+                            }
 
-                     ObjectDecoder objectDecoder = new ObjectDecoder(1024 * 1024,
-                             ClassResolvers.weakCachingConcurrentResolver(this
-                                     .getClass().getClassLoader()));
+                            ObjectDecoder objectDecoder = new ObjectDecoder(1024 * 1024,
+                                    ClassResolvers.weakCachingConcurrentResolver(this
+                                            .getClass().getClassLoader()));
 
-                     p.addLast(
-                             new ObjectEncoder(),objectDecoder,
-                             //new ChunkedWriteHandler(),
-                             new ConfigServerHandler(channelManager));
-                 }
-             });
+                            p.addLast(
+                                    new ObjectEncoder(), objectDecoder,
+                                    //new ChunkedWriteHandler(),
+                                    new ConfigServerHandler(channelManager));
+                        }
+                    });
 
             // Start the server.
-            ChannelFuture f = b.bind(PORT).sync();
-
-            // Wait until the server socket is closed.
-            f.channel().closeFuture().sync();
+            ChannelFuture f = b.bind(PORT);
+            f.syncUninterruptibly();
+            channel = f.channel();
+            /*// Wait until the server socket is closed.
+            f.channel().closeFuture().sync();*/
         } finally {
-            // Shut down all event loops to terminate all threads.
+            /*// Shut down all event loops to terminate all threads.
             bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();*/
         }
     }
 
+    /**
+     * 关闭server
+     */
+    public void doClose() {
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        new Thread(this).start();
+        try {
+            if (channel != null) {
+                channel.close();
+            }
+            if (b != null) {
+                bossGroup.shutdownGracefully();
+                workerGroup.shutdownGracefully();
+            }
+        } catch (Throwable e) {
+            log.error("fail to close Server. ",e);
+        }
     }
 
     @Override
-    public void run() {
+    public void afterPropertiesSet() throws Exception {
         try {
             this.runServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+          this.doClose();
     }
 }

@@ -28,13 +28,17 @@ public class ConfigController {
     @RequestParam(value="value",required = true) String value)  {
 
 
-        ConfigItem configItem = ConfigItem.builder().
-                module(module).subModule(subModule)
-                .key(key).value(value).build();
+        try {
+            ConfigItem configItem = ConfigItem.builder().
+                    module(module).subModule(subModule)
+                    .key(key).value(value).build();
 
 
-        channelManager.messageChanged(configItem);
-        return true;
+            channelManager.messageChanged(configItem);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
 
 
     }

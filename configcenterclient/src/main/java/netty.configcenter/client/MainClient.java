@@ -25,6 +25,13 @@ public class MainClient {
         );
 
         System.out.println("value:" + client.getValue(5, TimeUnit.SECONDS));
+        try {
+            Thread.sleep(10*1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("get value again:" + client.getValue(5, TimeUnit.SECONDS));
 
 
         /*for (int i=0;i<1;i++) {
