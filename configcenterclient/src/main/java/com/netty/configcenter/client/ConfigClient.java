@@ -1,6 +1,7 @@
 package com.netty.configcenter.client;
 
 import com.netty.configcenter.CacheManager;
+import com.netty.configcenter.config.ServerConfig;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.netty.configcenter.handler.ConfigClientHandler;
 import com.netty.configcenter.listener.MessageChangedListener;
 import com.netty.configcenter.model.ConfigItem;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +39,8 @@ public class ConfigClient {
 
     private Channel channel;
 
+    private ServerConfig serverConfig;
+
     public ConfigClient(String module,String subModule,String key) {
         configItem = new ConfigItem(module,subModule,key,null);
 
@@ -45,6 +49,7 @@ public class ConfigClient {
 
         configClientHandler = new ConfigClientHandler(configItem,cacheManager);
 
+        serverConfig = new ServerConfig("localhost:2181");
         this.runClient();
     }
 
@@ -82,8 +87,22 @@ public class ConfigClient {
                         }
                     });
 
+            //sever形式为localhost:8082
+            String server = serverConfig.getValidServer();
+
+            if (StringUtils.isEmpty(server)) {
+
+                log.error("no config server found");
+                return;
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("server info " + server);
+            }
+
+            String[] hostInfo = server.split(":");
+
             // Start the client.
-            ChannelFuture f = bootstrap.connect("localhost",8023);
+            ChannelFuture f = bootstrap.connect(hostInfo[0],Integer.parseInt(hostInfo[1]));
 
             boolean ret = f.awaitUninterruptibly(3000,TimeUnit.MILLISECONDS);
 
