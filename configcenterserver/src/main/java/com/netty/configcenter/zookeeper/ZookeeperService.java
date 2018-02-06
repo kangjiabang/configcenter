@@ -29,7 +29,7 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
 
     public static final String PATH_SERVER_LIST = "/config/center/data/serverlist";
 
-    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq";
+    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq_";
 
     /**
      * 创建持久化序列节点
@@ -140,7 +140,7 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
     public void createNodeEphemeral(String path,String value) {
         try {
             zookeeper.create(path,value.getBytes(),
-                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
+                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
 
 
         } catch (KeeperException e) {

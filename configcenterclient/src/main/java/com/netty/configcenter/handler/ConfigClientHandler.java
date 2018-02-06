@@ -43,9 +43,9 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
         listenerContext.addListener(listener);
     }
 
-    public ConfigClientHandler(ConfigItem configItem, CacheManager cacheManager) {
+    public ConfigClientHandler(ConfigItem configItem, CacheManager cacheManager,ListenerContext listenerContext) {
 
-        listenerContext = new ListenerContext();
+        this.listenerContext = listenerContext;
         this.cacheManager = cacheManager;
         //设置ConfigItem
         this.configItem = configItem;
@@ -54,7 +54,7 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         configChannel = new ConfigItemChannel(ctx.channel());
-        new Thread(new HeartBeatTask(configChannel)).start();
+        new Thread(new HeartBeatTask(configChannel,listenerContext)).start();
         if (log.isDebugEnabled()) {
 
             log.debug("channel is registered");

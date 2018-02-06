@@ -2,6 +2,9 @@ package com.netty.configcenter.client;
 
 import com.netty.configcenter.CacheManager;
 import com.netty.configcenter.config.ServerConfig;
+import com.netty.configcenter.context.ListenerContext;
+import com.netty.configcenter.event.ServerDisConnectEvent;
+import com.netty.configcenter.listener.ServerDisconnectListener;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -41,16 +44,44 @@ public class ConfigClient {
 
     private ServerConfig serverConfig;
 
+    private ListenerContext listenerContext;
+
+    private String zkHost = "localhost:2181";
+
+
+
     public ConfigClient(String module,String subModule,String key) {
         configItem = new ConfigItem(module,subModule,key,null);
 
         //缓存管理器实例化
         cacheManager = new CacheManager();
 
-        configClientHandler = new ConfigClientHandler(configItem,cacheManager);
+        listenerContext = new ListenerContext();
 
-        serverConfig = new ServerConfig("localhost:2181");
-        this.runClient();
+        listenerContext.addServerDisconnectListener(new ServerDisconnectListener() {
+            @Override
+            public void messageChanged(ServerDisConnectEvent event) {
+                if (log.isDebugEnabled()) {
+                    log.debug("reconnect server");
+                }
+                reConnect();
+            }
+        });
+
+        configClientHandler = new ConfigClientHandler(configItem,cacheManager,listenerContext);
+
+        serverConfig = new ServerConfig(zkHost);
+        this.openAndConnect();
+    }
+
+    /**
+     * 重新连接服务器
+     */
+    public void reConnect() {
+        //先关闭通道
+        this.doClose();
+        //再次连接
+        this.openAndConnect();
     }
 
 
@@ -65,7 +96,7 @@ public class ConfigClient {
     /**
      * 运行客户端
      */
-    public  void runClient() {
+    public  void openAndConnect() {
         workerGroup = new NioEventLoopGroup();
 
         try {
@@ -93,6 +124,7 @@ public class ConfigClient {
             if (StringUtils.isEmpty(server)) {
 
                 log.error("no config server found");
+                this.doClose();
                 return;
             }
             if (log.isDebugEnabled()) {
@@ -124,11 +156,13 @@ public class ConfigClient {
     public void doClose() {
 
         try {
+            log.debug("the client is going to close.");
             if (channel != null) {
                 channel.close();
             }
             if (bootstrap != null) {
                 workerGroup.shutdownGracefully();
+                bootstrap.clone();
             }
         } catch (Throwable e) {
             log.error("fail to close client. ",e);

@@ -19,7 +19,7 @@
 
     <include resource="logback-include.xml"/>
 
-    <logger name="netty.configcenter" level="DEBUG" additivity="false">
+    <logger name="com.netty.configcenter" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

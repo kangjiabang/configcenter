@@ -109,7 +109,7 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
             channel = f.channel();
 
             //注册服务
-            zookeeperService.createSeqNode(zookeeperService.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
+            zookeeperService.createNodeEphemeral(zookeeperService.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
             /*// Wait until the server socket is closed.
             f.channel().closeFuture().sync();*/
         } finally {
@@ -125,6 +125,8 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
     public void doClose() {
 
         try {
+            log.debug("the server is start to close.");
+
             if (channel != null) {
                 channel.close();
             }

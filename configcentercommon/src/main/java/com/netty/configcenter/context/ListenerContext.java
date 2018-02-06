@@ -2,7 +2,9 @@ package com.netty.configcenter.context;
 
 import com.alibaba.fastjson.JSON;
 import com.netty.configcenter.event.MessageEvent;
+import com.netty.configcenter.event.ServerDisConnectEvent;
 import com.netty.configcenter.listener.MessageChangedListener;
+import com.netty.configcenter.listener.ServerDisconnectListener;
 import com.netty.configcenter.model.ConfigItem;
 
 /**
@@ -14,6 +16,8 @@ public class ListenerContext {
 
     private MessageChangedListener listener;
 
+    private ServerDisconnectListener disConnectListener;
+
     public ListenerContext() {
     }
 
@@ -21,6 +25,9 @@ public class ListenerContext {
         this.listener = listener;
     }
 
+    public void addServerDisconnectListener(ServerDisconnectListener listener) {
+        this.disConnectListener = listener;
+    }
 
     public void fireMessageChaned(ConfigItem item) {
 
@@ -28,6 +35,18 @@ public class ListenerContext {
 
         if (listener != null) {
             listener.messageChanged(event);
+        }
+    }
+
+    /**
+     * 服务器断连
+     */
+    public void fireServerDisconnect() {
+
+        ServerDisConnectEvent event = new ServerDisConnectEvent();
+
+        if (listener != null) {
+            disConnectListener.messageChanged(event);
         }
     }
 }

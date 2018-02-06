@@ -1,6 +1,7 @@
 package com.netty.configcenter.task;
 
 import com.netty.configcenter.channel.ConfigItemChannel;
+import com.netty.configcenter.context.ListenerContext;
 import com.netty.configcenter.model.Packet;
 import lombok.extern.slf4j.Slf4j;
 import com.netty.configcenter.common.OpCode;
@@ -15,10 +16,13 @@ public class HeartBeatTask implements Runnable {
 
     private ConfigItemChannel channel;
 
+    private ListenerContext listenerContext;
+
     private long lastRead;
 
-    public HeartBeatTask(ConfigItemChannel channel) {
+    public HeartBeatTask(ConfigItemChannel channel,ListenerContext listenerContext) {
         this.channel = channel;
+        this.listenerContext = listenerContext;
     }
 
     @Override
@@ -50,13 +54,17 @@ public class HeartBeatTask implements Runnable {
                             header(OpCode.HEARTBEAT).build();
                     channel.getChannel().writeAndFlush(packet);
                 }
-                if (lastRead != null && now - lastRead > 1000 * 1000) {
+                if (lastRead != null && now - lastRead > 10 * 1000) {
 
                     if (log.isDebugEnabled()) {
                         log.debug("disconnected :");
                     }
 
-                    channel.getChannel().close();
+                    listenerContext.fireServerDisconnect();
+
+                    //channel.getChannel().close();
+
+
                 }
             } catch (Exception e) {
 
