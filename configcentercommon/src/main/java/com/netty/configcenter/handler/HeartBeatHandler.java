@@ -29,6 +29,8 @@ public class HeartBeatHandler implements ConfigHandler {
 
             //set Time for  heatbeatTask
             configItemChannel.setAttribute(ConfigItemChannel.LAST_READ_TIME,System.currentTimeMillis());
+
+
             if (packet.getHeader() == OpCode.HEARTBEAT) {
                     //do nothing
             }

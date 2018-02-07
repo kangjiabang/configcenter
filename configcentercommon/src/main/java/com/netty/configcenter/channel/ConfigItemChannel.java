@@ -17,6 +17,8 @@ public class ConfigItemChannel implements ConfChannel {
 
     public static final String LAST_READ_TIME = "lastReadTime";
 
+    public static final String DISCONNECTED = "disConnected";
+
     private Map<String,Object> atrributes = new ConcurrentHashMap<>();
 
     private Channel channel;

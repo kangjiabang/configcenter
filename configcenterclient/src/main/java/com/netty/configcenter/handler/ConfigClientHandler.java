@@ -5,6 +5,7 @@ import com.netty.configcenter.channel.ConfigItemChannel;
 import com.netty.configcenter.context.ListenerContext;
 import com.netty.configcenter.model.Packet;
 import com.netty.configcenter.task.HeartBeatTask;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +40,6 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
 
     private ConfigItem configItem = null;
 
-    public void addLister(MessageChangedListener listener) {
-        listenerContext.addListener(listener);
-    }
 
     public ConfigClientHandler(ConfigItem configItem, CacheManager cacheManager,ListenerContext listenerContext) {
 
@@ -59,10 +57,14 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
 
             log.debug("channel is registered");
         }
+
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (log.isDebugEnabled()) {
+            log.debug("get message from server." + msg);
+        }
         //处理心跳
         heartBeatHandler.handle(configChannel, msg);
         // System.out.println("message from server:" + msg);

@@ -18,8 +18,6 @@ public class HeartBeatTask implements Runnable {
 
     private ListenerContext listenerContext;
 
-    private long lastRead;
-
     public HeartBeatTask(ConfigItemChannel channel,ListenerContext listenerContext) {
         this.channel = channel;
         this.listenerContext = listenerContext;
@@ -35,9 +33,17 @@ public class HeartBeatTask implements Runnable {
                 long now = System.currentTimeMillis();
                 Long lastRead = (Long) channel.getAttribute(ConfigItemChannel.LAST_READ_TIME);
 
-                if (log.isDebugEnabled()) {
+
+                boolean disConnected = channel.getAttribute(ConfigItemChannel.DISCONNECTED) == null ? true : (Boolean) channel.getAttribute(ConfigItemChannel.DISCONNECTED);
+
+                /*//如果断连，返回
+                if (disConnected) {
+                    continue;
+                }*/
+
+               /* if (log.isDebugEnabled()) {
                     log.debug("last read:" + lastRead);
-                }
+                }*/
 
                 if (lastRead != null) {
                     //判断是否超时
@@ -48,6 +54,7 @@ public class HeartBeatTask implements Runnable {
                     }
 
                 }
+
                 if (lastRead != null && now - lastRead > 5000) {
 
                     Packet packet = Packet.builder().message("send ping to Server").
@@ -62,8 +69,11 @@ public class HeartBeatTask implements Runnable {
 
                     listenerContext.fireServerDisconnect();
 
-                    //channel.getChannel().close();
+                    //设置通道标识为disconnect
+                    channel.setAttribute(ConfigItemChannel.DISCONNECTED,true);
 
+                    //Task 和channel的生命周期相同，如果channel关闭，对应的task也应该结束
+                     break;
 
                 }
             } catch (Exception e) {

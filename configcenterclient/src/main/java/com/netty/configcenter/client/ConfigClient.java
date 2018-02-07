@@ -34,7 +34,7 @@ public class ConfigClient {
 
     private ConfigItem configItem;
 
-    private ConfigClientHandler configClientHandler;
+    //private ConfigClientHandler configClientHandler;
 
     private  EventLoopGroup workerGroup;
 
@@ -68,8 +68,6 @@ public class ConfigClient {
             }
         });
 
-        configClientHandler = new ConfigClientHandler(configItem,cacheManager,listenerContext);
-
         serverConfig = new ServerConfig(zkHost);
         this.openAndConnect();
     }
@@ -80,8 +78,21 @@ public class ConfigClient {
     public void reConnect() {
         //先关闭通道
         this.doClose();
+        //再次初始化
+       // initAgain();
         //再次连接
-        this.openAndConnect();
+        this.doConnect();
+    }
+
+    /**
+     * 相关变量清零并初始化
+     */
+    private void initAgain() {
+
+        configItem.setValue(null);
+
+        //缓存管理器实例化
+        cacheManager = new CacheManager();
     }
 
 
@@ -90,16 +101,30 @@ public class ConfigClient {
      * @param listener
      */
     public void addListener(MessageChangedListener listener) {
-        configClientHandler.addLister(listener);
+        listenerContext.addListener(listener);
     }
 
     /**
      * 运行客户端
      */
     public  void openAndConnect() {
-        workerGroup = new NioEventLoopGroup();
+
+        //打开通道
+        doOpen();
+
+        //连接通道
+        doConnect();
+    }
+
+
+    /**
+     * 打开BootStrap
+     */
+    private void doOpen() {
 
         try {
+            workerGroup = new NioEventLoopGroup();
+
             bootstrap = new Bootstrap();
             bootstrap.group(workerGroup).channel(NioSocketChannel.class)
                     .option(ChannelOption.SO_KEEPALIVE, true)
@@ -114,10 +139,20 @@ public class ConfigClient {
 
                             ch.pipeline().addLast(
                                     new ObjectEncoder(),objectDecoder,
-                                    configClientHandler);
+                                    new ConfigClientHandler(configItem,cacheManager,listenerContext));
                         }
                     });
 
+        } catch (Exception e) {
+            log.error("fail to open.",e);
+        }
+    }
+
+    /**
+     * 开始连接操作
+     */
+    private void doConnect() {
+        try {
             //sever形式为localhost:8082
             String server = serverConfig.getValidServer();
 
@@ -136,7 +171,7 @@ public class ConfigClient {
             // Start the client.
             ChannelFuture f = bootstrap.connect(hostInfo[0],Integer.parseInt(hostInfo[1]));
 
-            boolean ret = f.awaitUninterruptibly(3000,TimeUnit.MILLISECONDS);
+            boolean ret = f.awaitUninterruptibly(3000, TimeUnit.MILLISECONDS);
 
             if (ret && f.isSuccess()) {
                 channel = f.channel();
@@ -150,6 +185,7 @@ public class ConfigClient {
         }
     }
 
+
     /**
      * 关闭client
      */
@@ -161,8 +197,8 @@ public class ConfigClient {
                 channel.close();
             }
             if (bootstrap != null) {
-                workerGroup.shutdownGracefully();
-                bootstrap.clone();
+                //workerGroup.shutdownGracefully();
+                //bootstrap.clone();
             }
         } catch (Throwable e) {
             log.error("fail to close client. ",e);
@@ -187,7 +223,7 @@ public class ConfigClient {
             try {
                 Thread.sleep(unit.toMillis(timeOut));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("sleep error",e);
             }
         }
         if (configItem != null) {
@@ -197,4 +233,12 @@ public class ConfigClient {
         return configItem.getValue();
     }
 
+
+    /**
+     * 设置zkHost地址
+     * @param zkHost
+     */
+    public void setZkHost(String zkHost) {
+        this.zkHost = zkHost;
+    }
 }
