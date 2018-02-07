@@ -1,7 +1,8 @@
-package com.netty.configcenter.client;
+package com.netty.configcenter;
 
-import com.netty.configcenter.event.MessageEvent;
-import com.netty.configcenter.listener.MessageChangedListener;
+import com.netty.configcenter.client.ConfigClient;
+import com.netty.configcenter.event.MessageChangedEvent;
+import com.netty.configcenter.listener.MessageConfigListener;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,10 +15,10 @@ public class MainClient {
     public static void main(String[] args) {
         ConfigClient client = new ConfigClient("loan", "magina", "whiteList");
 
-        client.addListener(new MessageChangedListener() {
+        client.addListener(new MessageConfigListener<MessageChangedEvent>() {
 
            @Override
-           public void messageChanged(MessageEvent event) {
+           public void messageChanged(MessageChangedEvent event) {
                System.out.println("listener:" + event.getMessage());
            }
        }
@@ -25,13 +26,13 @@ public class MainClient {
         );
 
         System.out.println("value:" + client.getValue(5, TimeUnit.SECONDS));
-        try {
+        /*try {
             Thread.sleep(10*1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        System.out.println("get value again:" + client.getValue(5, TimeUnit.SECONDS));
+        System.out.println("get value again:" + client.getValue(5, TimeUnit.SECONDS));*/
 
 
         /*for (int i=0;i<1;i++) {

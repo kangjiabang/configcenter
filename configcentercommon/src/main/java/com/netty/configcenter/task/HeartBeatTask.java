@@ -73,7 +73,7 @@ public class HeartBeatTask implements Runnable {
                     channel.setAttribute(ConfigItemChannel.DISCONNECTED,true);
 
                     //Task 和channel的生命周期相同，如果channel关闭，对应的task也应该结束
-                     break;
+                    break;
 
                 }
             } catch (Exception e) {

@@ -5,9 +5,10 @@ package com.netty.configcenter.event;
  * @Date: Created in 20:51 31/1/18.
  * @Description:
  */
-public class MessageEvent {
+public class MessageChangedEvent extends ConfigEvent {
 
-    public MessageEvent(String message, String type, String version) {
+    public MessageChangedEvent(String message, String type, String version) {
+        super(null);
         this.message = message;
         this.type = type;
         this.version = version;

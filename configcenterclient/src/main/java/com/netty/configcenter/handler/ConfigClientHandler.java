@@ -1,16 +1,14 @@
 package com.netty.configcenter.handler;
 
-import com.netty.configcenter.CacheManager;
+import com.netty.configcenter.cache.CacheManager;
 import com.netty.configcenter.channel.ConfigItemChannel;
 import com.netty.configcenter.context.ListenerContext;
 import com.netty.configcenter.model.Packet;
 import com.netty.configcenter.task.HeartBeatTask;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 import com.netty.configcenter.common.OpCode;
-import com.netty.configcenter.listener.MessageChangedListener;
 import com.netty.configcenter.model.ConfigItem;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,7 +50,10 @@ public class ConfigClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         configChannel = new ConfigItemChannel(ctx.channel());
-        new Thread(new HeartBeatTask(configChannel,listenerContext)).start();
+        Thread t = new Thread(new HeartBeatTask(configChannel,listenerContext));
+        //设置为守护线程
+        t.setDaemon(true);
+        t.start();
         if (log.isDebugEnabled()) {
 
             log.debug("channel is registered");

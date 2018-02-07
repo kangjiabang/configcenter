@@ -1,10 +1,9 @@
 package com.netty.configcenter.client;
 
-import com.netty.configcenter.CacheManager;
+import com.netty.configcenter.cache.CacheManager;
 import com.netty.configcenter.config.ServerConfig;
 import com.netty.configcenter.context.ListenerContext;
 import com.netty.configcenter.event.ServerDisConnectEvent;
-import com.netty.configcenter.listener.ServerDisconnectListener;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -15,7 +14,7 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.extern.slf4j.Slf4j;
 import com.netty.configcenter.handler.ConfigClientHandler;
-import com.netty.configcenter.listener.MessageChangedListener;
+import com.netty.configcenter.listener.MessageConfigListener;
 import com.netty.configcenter.model.ConfigItem;
 import org.springframework.util.StringUtils;
 
@@ -58,7 +57,7 @@ public class ConfigClient {
 
         listenerContext = new ListenerContext();
 
-        listenerContext.addServerDisconnectListener(new ServerDisconnectListener() {
+        listenerContext.addListener(new MessageConfigListener<ServerDisConnectEvent>() {
             @Override
             public void messageChanged(ServerDisConnectEvent event) {
                 if (log.isDebugEnabled()) {
@@ -77,31 +76,11 @@ public class ConfigClient {
      */
     public void reConnect() {
         //先关闭通道
-        this.doClose();
+        this.doCloseChannel();
         //再次初始化
        // initAgain();
         //再次连接
         this.doConnect();
-    }
-
-    /**
-     * 相关变量清零并初始化
-     */
-    private void initAgain() {
-
-        configItem.setValue(null);
-
-        //缓存管理器实例化
-        cacheManager = new CacheManager();
-    }
-
-
-    /**
-     * 添加监听器
-     * @param listener
-     */
-    public void addListener(MessageChangedListener listener) {
-        listenerContext.addListener(listener);
     }
 
     /**
@@ -123,7 +102,7 @@ public class ConfigClient {
     private void doOpen() {
 
         try {
-            workerGroup = new NioEventLoopGroup();
+            workerGroup = new NioEventLoopGroup(1);
 
             bootstrap = new Bootstrap();
             bootstrap.group(workerGroup).channel(NioSocketChannel.class)
@@ -192,18 +171,63 @@ public class ConfigClient {
     public void doClose() {
 
         try {
-            log.debug("the client is going to close.");
+            log.debug("the client is going to closeZk.");
             if (channel != null) {
                 channel.close();
             }
+
+
             if (bootstrap != null) {
-                //workerGroup.shutdownGracefully();
-                //bootstrap.clone();
+                workerGroup.shutdownGracefully();
             }
+
+            //发出事件关闭事件
+            listenerContext.fireClientClose();
+
+            //关闭zk
+            serverConfig.close();
         } catch (Throwable e) {
-            log.error("fail to close client. ",e);
+            log.error("fail to closeZk client. ",e);
         }
     }
+
+    /**
+     * 关闭client
+     */
+    public void doCloseChannel() {
+
+        try {
+            log.debug("the channel is going to closeZk.");
+            if (channel != null) {
+                channel.close();
+            }
+        } catch (Throwable e) {
+            log.error("fail to closeZk channel. ",e);
+        }
+    }
+
+
+
+    /**
+     * 相关变量清零并初始化
+     */
+    private void initAgain() {
+
+        configItem.setValue(null);
+
+        //缓存管理器实例化
+        cacheManager = new CacheManager();
+    }
+
+
+    /**
+     * 添加监听器
+     * @param listener
+     */
+    public void addListener(MessageConfigListener listener) {
+        listenerContext.addListener(listener);
+    }
+
 
     /**
      * 获取配置项值
@@ -219,14 +243,14 @@ public class ConfigClient {
         }
 
         //等待结果，可以用httpclient替换
-        while (configItem.getValue() == null) {
+        if (configItem.getValue() == null) {
             try {
                 Thread.sleep(unit.toMillis(timeOut));
             } catch (InterruptedException e) {
                 log.error("sleep error",e);
             }
         }
-        if (configItem != null) {
+        if (configItem != null && !StringUtils.isEmpty(configItem.getValue())) {
             cacheManager.setCache(configItem,configItem.getValue());
         }
 

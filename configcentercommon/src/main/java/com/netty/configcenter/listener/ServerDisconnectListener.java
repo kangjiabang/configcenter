@@ -1,6 +1,5 @@
 package com.netty.configcenter.listener;
 
-import com.netty.configcenter.event.MessageEvent;
 import com.netty.configcenter.event.ServerDisConnectEvent;
 
 /**

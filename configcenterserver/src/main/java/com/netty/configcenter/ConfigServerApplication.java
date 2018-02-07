@@ -19,6 +19,6 @@ public class ConfigServerApplication implements EmbeddedServletContainerCustomiz
 
     @Override
     public void customize(ConfigurableEmbeddedServletContainer container) {
-        container.setPort(8083);
+        container.setPort(8082);
     }
 }

@@ -3,7 +3,6 @@ package com.netty.configcenter.config;
 import com.netty.configcenter.zookeeper.ZookeeperService;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,6 +35,14 @@ public class ServerConfig {
             return serverList.get(0);
         }
         return null;
+    }
+
+
+    /**
+     * 关闭zk
+     */
+    public void close() {
+        zookeeperService.closeZk();
     }
 
 

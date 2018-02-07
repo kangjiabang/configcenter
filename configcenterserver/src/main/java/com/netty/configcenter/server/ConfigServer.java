@@ -32,6 +32,7 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Service;
@@ -45,10 +46,10 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
 
     static final boolean SSL = System.getProperty("ssl") != null;
     // Use the same default port with the telnet example so that we can use the telnet client example to access it.
-    static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8992" : "8023"));
+    static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8992" : "8022"));
 
-    @Autowired
-    private ZookeeperService zookeeperService;
+    /*@Autowired
+    private ZookeeperService zookeeperService;*/
 
     @Autowired
     private ChannelManager channelManager;
@@ -60,6 +61,9 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
     private  Channel channel;
 
     private ServerBootstrap b;
+
+    @Value("${zk.server}")
+    private String zookeeperHost;
 
     public void runServer() throws Exception {
         // Configure SSL.
@@ -108,6 +112,7 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
             f.syncUninterruptibly();
             channel = f.channel();
 
+
             //注册服务
             zookeeperService.createNodeEphemeral(zookeeperService.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
             /*// Wait until the server socket is closed.
@@ -134,6 +139,8 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
                 bossGroup.shutdownGracefully();
                 workerGroup.shutdownGracefully();
             }
+
+            zookeeperService.closeZk();
         } catch (Throwable e) {
             log.error("fail to close Server. ",e);
         }
@@ -142,9 +149,12 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
+
+            zookeeperService = new ZookeeperService(zookeeperHost);
+
             this.runServer();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("afterPropertiesSet error. ",e);
         }
     }
 

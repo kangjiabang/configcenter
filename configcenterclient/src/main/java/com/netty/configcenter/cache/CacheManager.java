@@ -1,4 +1,4 @@
-package com.netty.configcenter;
+package com.netty.configcenter.cache;
 
 import com.netty.configcenter.model.ConfigItem;
 

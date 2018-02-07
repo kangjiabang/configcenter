@@ -5,7 +5,10 @@ package com.netty.configcenter.event;
  * @Date: Created in 22:42 6/2/18.
  * @Description:
  */
-public class ServerDisConnectEvent {
+public class ServerDisConnectEvent extends ConfigEvent {
 
+    public ServerDisConnectEvent(Object source) {
+        super(source);
+    }
 
 }
