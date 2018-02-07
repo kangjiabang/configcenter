@@ -2,9 +2,6 @@ package com.netty.configcenter.zookeeper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
@@ -18,20 +15,14 @@ import java.util.List;
  * @Description:
  */
 @Slf4j
-public class ZookeeperService implements Watcher {
+public class ZookeeperServiceClient implements Watcher {
 
     private static ZooKeeper zookeeper;
 
     private String connectString;
 
-    public static final String PATH_PREFIX = "/config/center/data";
 
-    public static final String PATH_SERVER_LIST = "/config/center/data/serverlist";
-
-    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq";
-
-
-    public ZookeeperService(String zkHost) {
+    public ZookeeperServiceClient(String zkHost) {
 
         this.connectString = zkHost;
         init();
@@ -164,6 +155,20 @@ public class ZookeeperService implements Watcher {
             zookeeper = new ZooKeeper(connectString,3000,this);
         } catch (IOException e) {
             log.error("fail to connect zookeeper." ,e);
+        }
+    }
+
+    /**
+     * zk关闭
+     */
+    public void closeZk() {
+
+        try {
+            if (zookeeper != null) {
+                zookeeper.close();
+            }
+        } catch (Exception e) {
+            log.error("fail to closeZk zookeeper." ,e);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.netty;
 
-import com.netty.configcenter.zookeeper.ZookeeperService;
 import org.apache.zookeeper.*;
 import org.junit.Before;
 import org.junit.Test;

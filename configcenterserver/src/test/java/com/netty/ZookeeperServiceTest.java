@@ -1,8 +1,7 @@
 package com.netty;
 
 import com.netty.configcenter.ConfigServerApplication;
-import com.netty.configcenter.zookeeper.ZookeeperService;
-import org.apache.zookeeper.ZooKeeper;
+import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import java.util.List;
 public class ZookeeperServiceTest {
 
     @Autowired
-    private ZookeeperService  zookeeperService;
+    private ZookeeperServiceClient zookeeperService;
     @Test
     public void testZookeeperCreateNode() {
         zookeeperService.createNode(zookeeperService.PATH_PREFIX+ "/"+ "serverlist/server","127.0.0.1:2083");

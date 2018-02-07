@@ -1,6 +1,7 @@
 package com.netty.configcenter.config;
 
-import com.netty.configcenter.zookeeper.ZookeeperService;
+import com.netty.configcenter.constant.Constants;
+import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -16,11 +17,11 @@ public class ServerConfig {
     /**
      * zookeeper 相关操作
      */
-    private ZookeeperService zookeeperService;
+    private ZookeeperServiceClient zookeeperService;
 
 
     public ServerConfig(String zkHost) {
-        this.zookeeperService = new ZookeeperService(zkHost);
+        this.zookeeperService = new ZookeeperServiceClient(zkHost);
     }
 
 
@@ -29,7 +30,7 @@ public class ServerConfig {
      * @return
      */
     public String getValidServer() {
-        List<String> serverList = this.zookeeperService.getChildrenData(zookeeperService.PATH_SERVER_LIST);
+        List<String> serverList = this.zookeeperService.getChildrenData(Constants.PATH_SERVER_LIST);
 
         if (!CollectionUtils.isEmpty(serverList)) {
             return serverList.get(0);

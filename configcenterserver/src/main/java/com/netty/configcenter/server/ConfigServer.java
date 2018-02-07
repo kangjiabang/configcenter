@@ -15,6 +15,7 @@
  */
 package com.netty.configcenter.server;
 
+import com.netty.configcenter.constant.Constants;
 import com.netty.configcenter.zookeeper.ZookeeperService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -48,8 +49,8 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
     // Use the same default port with the telnet example so that we can use the telnet client example to access it.
     static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8992" : "8022"));
 
-    /*@Autowired
-    private ZookeeperService zookeeperService;*/
+    @Autowired
+    private ZookeeperService zookeeperService;
 
     @Autowired
     private ChannelManager channelManager;
@@ -114,7 +115,7 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
 
 
             //注册服务
-            zookeeperService.createNodeEphemeral(zookeeperService.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
+            zookeeperService.createNodeEphemeral(Constants.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
             /*// Wait until the server socket is closed.
             f.channel().closeFuture().sync();*/
         } finally {
@@ -149,9 +150,6 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
-
-            zookeeperService = new ZookeeperService(zookeeperHost);
-
             this.runServer();
         } catch (Exception e) {
             log.error("afterPropertiesSet error. ",e);

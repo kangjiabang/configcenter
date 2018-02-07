@@ -1,5 +1,6 @@
 package com.netty.configcenter.zookeeper;
 
+import com.netty.configcenter.constant.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 import org.springframework.beans.factory.InitializingBean;
@@ -24,12 +25,6 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
 
     @Value("${zk.server}")
     private String connectString;
-
-    public static final String PATH_PREFIX = "/config/center/data";
-
-    public static final String PATH_SERVER_LIST = "/config/center/data/serverlist";
-
-    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq_";
 
     /**
      * 创建持久化序列节点
@@ -104,10 +99,10 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
                 String fullPath;
                 //如果是根路径
                 if (subPath.equals("/")) {
-                    fullPath = PATH_PREFIX + path + "/" + subPath;
+                    fullPath = Constants.PATH_PREFIX + path + "/" + subPath;
 
                 } else {
-                    fullPath = PATH_PREFIX + "/" + path + "/" + subPath;
+                    fullPath = Constants.PATH_PREFIX + "/" + path + "/" + subPath;
                 }
                 dataList.add(this.getData(fullPath));
             }
@@ -140,7 +135,7 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
     public void createNodeEphemeral(String path,String value) {
         try {
             zookeeper.create(path,value.getBytes(),
-                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 
 
         } catch (KeeperException e) {
@@ -156,6 +151,20 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
     }
 
 
+    /**
+     * zk关闭
+     */
+    public void closeZk() {
+
+        try {
+            if (zookeeper != null) {
+                zookeeper.close();
+            }
+        } catch (Exception e) {
+            log.error("fail to closeZk zookeeper." ,e);
+        }
+    }
+    
     @Override
     public void process(WatchedEvent event) {
 
