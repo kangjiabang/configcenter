@@ -31,6 +31,10 @@ public class ConfigClient {
 
     public ConfigClient(String module,String subModule,String key) {
 
+        if (StringUtils.isEmpty(module) && StringUtils.isEmpty(subModule) && StringUtils.isEmpty(key)) {
+            throw new IllegalArgumentException("parameters can not empty.");
+        }
+
         configItem = new ConfigItem(module,subModule,key,null);
 
         zookeeperServiceClient = new ZookeeperServiceClient(zkHost);
