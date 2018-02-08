@@ -1,7 +1,8 @@
 package com.netty;
 
 import com.netty.configcenter.ConfigServerApplication;
-import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
+import com.netty.configcenter.constant.Constants;
+import com.netty.configcenter.zookeeper.ZookeeperService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,27 +21,27 @@ import java.util.List;
 public class ZookeeperServiceTest {
 
     @Autowired
-    private ZookeeperServiceClient zookeeperService;
+    private ZookeeperService zookeeperService;
     @Test
     public void testZookeeperCreateNode() {
-        zookeeperService.createNode(zookeeperService.PATH_PREFIX+ "/"+ "serverlist/server","127.0.0.1:2083");
+        zookeeperService.createNode(Constants.PATH_PREFIX+ "/"+ "serverlist/server","127.0.0.1:2083");
     }
 
     @Test
     public void testZookeeperCreateSeqNode() {
-        zookeeperService.createSeqNode(zookeeperService.PATH_PREFIX+ "/"+"serverlist/server_seq_","127.0.0.1:2083");
+        zookeeperService.createSeqNode(Constants.PATH_PREFIX+ "/"+"serverlist/server_seq_","127.0.0.1:2083");
     }
 
 
     @Test
     public void testZookeeperGetChildrenData() {
-        List<String> listData = zookeeperService.getChildrenData(zookeeperService.PATH_PREFIX+ "/"+"serverlist");
+        List<String> listData = zookeeperService.getChildrenData(Constants.PATH_PREFIX+ "/"+"serverlist");
         System.out.println(listData);
     }
 
     @Test
     public void testZookeeperEphemeral() {
-        zookeeperService.createNodeEphemeral(zookeeperService.PATH_PREFIX+ "/"+"serverlist/server1","127.0.0.1");
+        zookeeperService.createNodeSeqEphemeral(Constants.PATH_PREFIX+ "/"+"serverlist/server1","127.0.0.1");
 
     }
 }

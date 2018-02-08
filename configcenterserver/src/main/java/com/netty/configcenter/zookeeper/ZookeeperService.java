@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class ZookeeperService  implements InitializingBean ,Watcher {
+public class ZookeeperService implements InitializingBean, Watcher {
 
     private static ZooKeeper zookeeper;
 
@@ -28,61 +28,107 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
 
     /**
      * 创建持久化序列节点
+     *
      * @param path
      * @param value
      */
-    public void createSeqNode(String path,String value) {
+    public void createSeqNode(String path, String value) {
         try {
-            zookeeper.create(path,value.getBytes(),
+            zookeeper.create(path, value.getBytes(),
                     ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT_SEQUENTIAL);
 
         } catch (KeeperException e) {
-            log.error("createSeqNode error.",e);
+            log.error("createSeqNode error.", e);
 
         } catch (InterruptedException e) {
-            log.error("createSeqNode error.",e);
+            log.error("createSeqNode error.", e);
         }
 
     }
 
     /**
      * 创建持久化节点
+     *
      * @param path
      * @param value
      */
-    public void createNode(String path,String value) {
+    public void createNode(String path, String value) {
         try {
-            zookeeper.create(path,value.getBytes(),
+            zookeeper.create(path, value.getBytes(),
                     ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
         } catch (KeeperException e) {
-            log.error("createNode error.",e);
+            log.error("createNode error.", e);
 
         } catch (InterruptedException e) {
-            log.error("createNode error.",e);
+            log.error("createNode error.", e);
         }
+
+    }
+
+
+    /**
+     * 递归的创建持久化节点，如果父节点不存在，就创建
+     *
+     * @param path
+     * @param value
+     */
+    public void createNodeRecursively(String path, String value) {
+
+        // 例如：path：/config/center/data/serverlist
+        try {
+            String[] nodes = null;
+            if (path.startsWith("/")) {
+                //去掉节点前的"/"
+                path = path.substring(1);
+            }
+            //按照"/" 分割
+            nodes = path.split("/");
+
+            String pathToCreate = "";
+            for (int i = 0; i < nodes.length; i++) {
+                pathToCreate = pathToCreate + "/" + nodes[i];
+                //如果不存在，创建节点
+                if (zookeeper.exists(pathToCreate, false) == null) {
+                    //如果是最后一个节点，需要设置节点的值
+                    if (i == nodes.length - 1) {
+                        this.createNode(pathToCreate, value);
+                    } else {
+                        this.createNode(pathToCreate, "");
+                    }
+                }
+
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
     /**
      * 获取子节点
+     *
      * @param path
      * @return
      */
     public List<String> getChildren(String path) {
         try {
 
-            List<String> childList = zookeeper.getChildren(path,false);
+            List<String> childList = zookeeper.getChildren(path, false);
 
             return childList;
         } catch (Exception e) {
-            log.error("getChildren error.",e);
+            log.error("getChildren error.", e);
         }
         return null;
     }
 
     /**
      * 获取子节点数据列表
+     *
      * @param path
      * @return
      */
@@ -93,7 +139,8 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
             if (CollectionUtils.isEmpty(children)) {
                 return null;
             }
-            List<String> dataList = new ArrayList<>();;
+            List<String> dataList = new ArrayList<>();
+            ;
             for (String subPath : children) {
 
                 String fullPath;
@@ -110,44 +157,52 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
             return dataList;
 
         } catch (Exception e) {
-            log.error("getChildrenData error.",e);
+            log.error("getChildrenData error.", e);
         }
         return null;
     }
 
     /**
      * 获取节点数据
+     *
      * @param fullPath
      * @return
      */
     public String getData(String fullPath) {
         try {
 
-            byte[] data = zookeeper.getData(fullPath,false,null);
+            byte[] data = zookeeper.getData(fullPath, false, null);
 
             return new String(data, Charset.forName("utf-8"));
         } catch (Exception e) {
-            log.error("getData error.",e);
+            log.error("getData error.", e);
         }
         return null;
     }
 
-    public void createNodeEphemeral(String path,String value) {
+    /**
+     * 创建临时序列化节点
+     *
+     * @param path
+     * @param value
+     */
+    public void createNodeSeqEphemeral(String path, String value) {
         try {
-            zookeeper.create(path,value.getBytes(),
-                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
+            zookeeper.create(path, value.getBytes(),
+                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
 
 
         } catch (KeeperException e) {
-            log.error("createNodeEphemeral error.",e);
+            log.error("createNodeSeqEphemeral error.", e);
         } catch (InterruptedException e) {
-            log.error("createNodeEphemeral error.",e);
+            log.error("createNodeSeqEphemeral error.", e);
         }
 
     }
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        zookeeper = new ZooKeeper(connectString,3000,this);
+        zookeeper = new ZooKeeper(connectString, 3000, this);
     }
 
 
@@ -161,10 +216,10 @@ public class ZookeeperService  implements InitializingBean ,Watcher {
                 zookeeper.close();
             }
         } catch (Exception e) {
-            log.error("fail to closeZk zookeeper." ,e);
+            log.error("fail to closeZk zookeeper.", e);
         }
     }
-    
+
     @Override
     public void process(WatchedEvent event) {
 

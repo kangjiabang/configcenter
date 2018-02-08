@@ -16,6 +16,7 @@
 package com.netty.configcenter.server;
 
 import com.netty.configcenter.constant.Constants;
+import com.netty.configcenter.network.IpUtils;
 import com.netty.configcenter.zookeeper.ZookeeperService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -115,7 +116,8 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
 
 
             //注册服务
-            zookeeperService.createNodeEphemeral(Constants.PATH_SERVER_NODE_PATH,"localhost:" + PORT);
+            zookeeperService.createNodeRecursively(Constants.PATH_SERVER_LIST,"");
+            zookeeperService.createNodeSeqEphemeral(Constants.PATH_SERVER_NODE_PATH, IpUtils.getLocalHostAddress() + ":" + PORT);
             /*// Wait until the server socket is closed.
             f.channel().closeFuture().sync();*/
         } finally {

@@ -16,5 +16,5 @@ public class Constants {
     /**
      * 服务器列表
      */
-    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq";
+    public static final String PATH_SERVER_NODE_PATH = "/config/center/data/serverlist/server_seq_";
 }
