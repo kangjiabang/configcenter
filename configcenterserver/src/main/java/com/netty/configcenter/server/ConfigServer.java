@@ -16,7 +16,7 @@
 package com.netty.configcenter.server;
 
 import com.netty.configcenter.constant.Constants;
-import com.netty.configcenter.network.IpUtils;
+import com.netty.configcenter.utils.IpUtils;
 import com.netty.configcenter.zookeeper.ZookeeperService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;

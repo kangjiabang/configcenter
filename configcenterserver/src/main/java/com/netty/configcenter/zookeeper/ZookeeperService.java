@@ -3,6 +3,7 @@ package com.netty.configcenter.zookeeper;
 import com.netty.configcenter.constant.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
+import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -178,6 +179,63 @@ public class ZookeeperService implements InitializingBean, Watcher {
             log.error("getData error.", e);
         }
         return null;
+    }
+
+
+    /**
+     * 判断是否存在
+     * @param path
+     */
+    public boolean exists(String path) {
+        try {
+
+            Stat stat = zookeeper.exists(path,false);
+            if (stat != null)  {
+               return true;
+            }
+
+        } catch (Exception e) {
+            log.error("exists method error.path:{}",path ,e);
+        }
+        return false;
+
+    }
+
+    /**
+     * 判断是否存在
+     * @param path
+     */
+    public Stat existsAndReturnStat(String path) {
+        try {
+
+            Stat stat = zookeeper.exists(path,false);
+            return stat;
+
+        } catch (Exception e) {
+            log.error("exists method error.path:{}",path ,e);
+        }
+        return null;
+
+    }
+
+    /**
+     * 设置数据值
+     * @param path
+     * @param value
+     */
+    public void setData(String path,String value) {
+        try {
+
+            Stat stat = existsAndReturnStat(path);
+
+            if (stat != null)  {
+                zookeeper.setData(path, value.getBytes(), stat.getVersion());
+            }
+
+        } catch (Exception e) {
+            log.error("fail to set data." ,e);
+        }
+
     }
 
     /**

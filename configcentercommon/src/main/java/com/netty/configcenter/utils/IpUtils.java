@@ -1,4 +1,4 @@
-package com.netty.configcenter.network;
+package com.netty.configcenter.utils;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -13,6 +13,11 @@ public class Constants {
      */
     public static final String PATH_PREFIX = "/config/center/data";
     public static final String PATH_SERVER_LIST = "/config/center/data/serverlist";
+
+    /**
+     * 配置数据目录
+     */
+    public static final String PATH_CONFIG_DATA = "/config/center/data/configdata";
     /**
      * 服务器列表
      */

@@ -4,6 +4,8 @@ import com.netty.configcenter.cache.CacheManager;
 import com.netty.configcenter.config.ServerConfig;
 import com.netty.configcenter.context.ListenerContext;
 import com.netty.configcenter.event.ServerDisConnectEvent;
+import com.netty.configcenter.utils.PathUtils;
+import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -47,13 +49,15 @@ public class ConfigClient {
 
     private String zkHost = "localhost:2181";
 
-
+    private ZookeeperServiceClient zookeeperServiceClient;
 
     public ConfigClient(String module,String subModule,String key) {
         configItem = new ConfigItem(module,subModule,key,null);
 
         //缓存管理器实例化
         cacheManager = new CacheManager();
+
+        zookeeperServiceClient = new ZookeeperServiceClient(zkHost);
 
         listenerContext = new ListenerContext();
 
@@ -233,7 +237,7 @@ public class ConfigClient {
      * 获取配置项值
      * @return
      */
-    public String getValue(int timeOut, TimeUnit unit) {
+    public String getValue() {
 
         String cachedValue = cacheManager.getCache(configItem);
 
@@ -242,19 +246,18 @@ public class ConfigClient {
             return cachedValue;
         }
 
-        //等待结果，可以用httpclient替换
-        if (configItem.getValue() == null) {
-            try {
-                Thread.sleep(unit.toMillis(timeOut));
-            } catch (InterruptedException e) {
-                log.error("sleep error",e);
-            }
-        }
-        if (configItem != null && !StringUtils.isEmpty(configItem.getValue())) {
-            cacheManager.setCache(configItem,configItem.getValue());
+        //首次获取配置项值时，从zk处拉取
+        String path = PathUtils.buildConfigData(configItem.getModule(),configItem.getSubModule(),configItem.getKey());
+
+        String value = zookeeperServiceClient.getData(path);
+
+        //zk处值不为空时，刷新缓存
+        if (configItem != null && !StringUtils.isEmpty(value)) {
+            configItem.setValue(value);
+            cacheManager.setCache(configItem,value);
         }
 
-        return configItem.getValue();
+        return value;
     }
 
 

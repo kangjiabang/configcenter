@@ -25,7 +25,7 @@ public class MainClient {
 
         );
 
-        System.out.println("value:" + client.getValue(5, TimeUnit.SECONDS));
+        System.out.println("config value:" + client.getValue());
         /*try {
             Thread.sleep(10*1000);
         } catch (InterruptedException e) {

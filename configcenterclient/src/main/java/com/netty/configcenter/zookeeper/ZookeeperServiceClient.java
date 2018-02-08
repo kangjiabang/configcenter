@@ -1,5 +1,6 @@
 package com.netty.configcenter.zookeeper;
 
+import com.netty.configcenter.factory.ZookeeperFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 import org.springframework.util.CollectionUtils;
@@ -15,7 +16,7 @@ import java.util.List;
  * @Description:
  */
 @Slf4j
-public class ZookeeperServiceClient implements Watcher {
+public class ZookeeperServiceClient  {
 
     private static ZooKeeper zookeeper;
 
@@ -124,6 +125,11 @@ public class ZookeeperServiceClient implements Watcher {
     public String getData(String fullPath) {
         try {
 
+            //节点不存在，返回null
+            if (zookeeper.exists(fullPath,false) == null) {
+                return null;
+            }
+
             byte[] data = zookeeper.getData(fullPath,false,null);
 
             return new String(data, Charset.forName("utf-8"));
@@ -151,11 +157,14 @@ public class ZookeeperServiceClient implements Watcher {
      * 初始化
      */
     public void init() {
+
         try {
-            zookeeper = new ZooKeeper(connectString,3000,this);
+            zookeeper = ZookeeperFactory.getZooKeeper(connectString);
         } catch (IOException e) {
-            log.error("fail to connect zookeeper." ,e);
+
+            log.error("fail to connect zookeeper.zkHost{}", connectString, e);
         }
+
     }
 
     /**
@@ -172,11 +181,6 @@ public class ZookeeperServiceClient implements Watcher {
         }
     }
 
-
-    @Override
-    public void process(WatchedEvent event) {
-
-    }
 
 
 }

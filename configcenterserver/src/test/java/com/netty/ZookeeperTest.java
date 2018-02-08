@@ -1,6 +1,8 @@
 package com.netty;
 
 import org.apache.zookeeper.*;
+import org.apache.zookeeper.data.Stat;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +50,17 @@ public class ZookeeperTest {
     public void testZookeeperCreateNodeRecursively() {
 
         this.createNodeRecursively("/test/mytest/node","testdata");
+
+    }
+
+    @Test
+    public void testZookeeperSetNodeValue() {
+
+        this.createNodeRecursively("/test/mytest/node","testdata");
+
+        this.setData("/test/mytest/node","newdata");
+
+        Assert.assertEquals("newdata",this.getData("/test/mytest/node"));
     }
 
     @Test
@@ -139,6 +152,25 @@ public class ZookeeperTest {
         return null;
     }
 
+
+    /**
+     * 设置数据值
+     * @param path
+     * @param value
+     */
+    public void setData(String path,String value) {
+        try {
+
+            Stat stat = zookeeper.exists(path,false);
+            if (stat != null)  {
+                zookeeper.setData(path, value.getBytes(), stat.getVersion());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * 递归的创建持久化节点，如果父节点不存在，就创建

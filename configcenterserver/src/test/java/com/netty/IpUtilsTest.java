@@ -1,6 +1,6 @@
 package com.netty;
 
-import com.netty.configcenter.network.IpUtils;
+import com.netty.configcenter.utils.IpUtils;
 import org.junit.Test;
 
 import java.net.InetAddress;
