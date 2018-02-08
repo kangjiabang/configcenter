@@ -26,25 +26,6 @@ public class MainClient {
         );
 
         System.out.println("config value:" + client.getValue());
-        /*try {
-            Thread.sleep(10*1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("get value again:" + client.getValue(5, TimeUnit.SECONDS));*/
-
-
-        /*for (int i=0;i<1;i++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                        //ConfigClient client = new ConfigClient("loan","magina","whiteList");
-                }
-            }).start();
-        }*/
-
 
     }
 }

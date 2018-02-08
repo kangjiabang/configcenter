@@ -33,8 +33,6 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
 
     protected ConfigServerHandler(ChannelManager channelManager) {
         this.channelManager = channelManager;
-        System.out.println("ConfigServerHandler()");
-
     }
 
 
@@ -70,7 +68,7 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
         switch (packet.getHeader()) {
             case OpCode.HEARTBEAT: {
                 if (log.isDebugEnabled()) {
-                    log.debug(((Packet) msg).getMessage());
+                    log.debug("message from client:" + ((Packet) msg).getMessage());
                 }
 
                 Packet pingPacket = Packet.builder().message("get ping from server.").
@@ -99,9 +97,6 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
                 channelManager.addChannel(packet.getConfigItem(),ctx.channel());
             }
         }
-        //System.out.println("message from client:" + msg.toString());
-
-        //ctx.writeAndFlush("OK: ");
 
     }
 

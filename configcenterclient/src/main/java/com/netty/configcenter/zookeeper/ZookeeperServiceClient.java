@@ -26,7 +26,7 @@ public class ZookeeperServiceClient  {
     public ZookeeperServiceClient(String zkHost) {
 
         this.connectString = zkHost;
-        init();
+        getZooKeeperFromFactory();
     }
     /**
      * 创建持久化序列节点
@@ -154,9 +154,9 @@ public class ZookeeperServiceClient  {
     }
 
     /**
-     * 初始化
+     * 获取Zookeeper实例
      */
-    public void init() {
+    public void getZooKeeperFromFactory() {
 
         try {
             zookeeper = ZookeeperFactory.getZooKeeper(connectString);
