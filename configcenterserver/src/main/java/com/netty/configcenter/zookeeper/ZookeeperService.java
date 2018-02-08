@@ -165,18 +165,22 @@ public class ZookeeperService implements InitializingBean, Watcher {
 
     /**
      * 获取节点数据
-     *
      * @param fullPath
      * @return
      */
     public String getData(String fullPath) {
         try {
 
-            byte[] data = zookeeper.getData(fullPath, false, null);
+            //节点不存在，返回null
+            if (zookeeper.exists(fullPath,false) == null) {
+                return null;
+            }
+
+            byte[] data = zookeeper.getData(fullPath,false,null);
 
             return new String(data, Charset.forName("utf-8"));
         } catch (Exception e) {
-            log.error("getData error.", e);
+            log.error("getData error.",e);
         }
         return null;
     }

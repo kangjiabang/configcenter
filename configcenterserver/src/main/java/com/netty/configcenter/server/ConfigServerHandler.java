@@ -16,6 +16,8 @@
 
 package com.netty.configcenter.server;
 
+import com.netty.configcenter.utils.PathUtils;
+import com.netty.configcenter.zookeeper.ZookeeperService;
 import io.netty.channel.*;
 import lombok.extern.slf4j.Slf4j;
 import com.netty.configcenter.common.OpCode;
@@ -29,12 +31,14 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
     /**
      * channel管理器
      */
-    private  ChannelManager channelManager;
+    private ChannelManager channelManager;
 
-    protected ConfigServerHandler(ChannelManager channelManager) {
+    private ZookeeperService zookeeperService;
+
+    protected ConfigServerHandler(ChannelManager channelManager, ZookeeperService zookeeperService) {
         this.channelManager = channelManager;
+        this.zookeeperService = zookeeperService;
     }
-
 
 
     @Override
@@ -57,11 +61,10 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
 
-
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        Thread.sleep(1000);
+       /* Thread.sleep(1000);*/
 
         Packet packet = (Packet) msg;
 
@@ -83,23 +86,20 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
             }
             case OpCode.FIRST_REGISTER: {
 
-                //首次注册，将信息返回
-                ConfigItem configItem = new ConfigItem();
-                configItem.setKey("whiteList");
-                configItem.setModule("loan");
-                configItem.setSubModule("magina");
-                configItem.setValue("127.0.0.1");
+                ConfigItem configItem = packet.getConfigItem();
+                String path = PathUtils.buildConfigData(configItem.getModule(), configItem.getSubModule(), configItem.getKey());
+
+                configItem.setValue(zookeeperService.getData(path));
 
                 Packet sendPacket = Packet.builder().configItem(configItem).header(OpCode.FIRST_REGISTER).build();
 
                 ctx.writeAndFlush(sendPacket);
 
-                channelManager.addChannel(packet.getConfigItem(),ctx.channel());
+                channelManager.addChannel(packet.getConfigItem(), ctx.channel());
             }
         }
 
     }
-
 
 
     @Override

@@ -27,5 +27,13 @@ public class MainClient {
 
         System.out.println("config value:" + client.getValue());
 
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("get config value again:" + client.getValue());
+
     }
 }

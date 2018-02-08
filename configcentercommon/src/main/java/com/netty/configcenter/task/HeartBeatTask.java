@@ -28,12 +28,13 @@ public class HeartBeatTask implements Runnable {
 
         while (true) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
 
                 long now = System.currentTimeMillis();
                 Long lastRead = (Long) channel.getAttribute(ConfigItemChannel.LAST_READ_TIME);
 
 
+                //deprecated
                 boolean disConnected = channel.getAttribute(ConfigItemChannel.DISCONNECTED) == null ? true : (Boolean) channel.getAttribute(ConfigItemChannel.DISCONNECTED);
 
                 /*//如果断连，返回

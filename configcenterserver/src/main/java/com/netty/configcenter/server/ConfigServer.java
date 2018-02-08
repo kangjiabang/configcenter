@@ -105,7 +105,7 @@ public class ConfigServer implements InitializingBean, ApplicationListener<Conte
                             p.addLast(
                                     new ObjectEncoder(), objectDecoder,
                                     //new ChunkedWriteHandler(),
-                                    new ConfigServerHandler(channelManager));
+                                    new ConfigServerHandler(channelManager,zookeeperService));
                         }
                     });
 
