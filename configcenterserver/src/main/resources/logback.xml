@@ -15,7 +15,7 @@
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
     <property name="LOG_HOME" value="${LOG_HOME:-logs/configcenter}"/>
     <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
-    <contextName>kuaidai-web</contextName>
+    <contextName>configcenter</contextName>
 
     <include resource="logback-include.xml"/>
 
