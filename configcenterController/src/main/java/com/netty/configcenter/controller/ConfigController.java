@@ -4,17 +4,20 @@ import com.netty.configcenter.constant.Constants;
 import com.netty.configcenter.exception.NodeExistsException;
 import com.netty.configcenter.exception.NodeNotExistsException;
 import com.netty.configcenter.exception.NodeValueNotChangedException;
-import com.netty.configcenter.server.ChannelManager;
 import com.netty.configcenter.model.ConfigItem;
+import com.netty.configcenter.nio.ConfigNioClient;
 import com.netty.configcenter.utils.PathUtils;
 import com.netty.configcenter.zookeeper.ZookeeperService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Arrays;
 
 /**
  * @Author：zeqi
@@ -27,8 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConfigController {
 
 
-    @Autowired
-    private ChannelManager channelManager;
+   // @Autowired
+    //private ChannelManager channelManager;
 
     @Autowired
     private ZookeeperService zookeeperService;
@@ -63,8 +66,9 @@ public class ConfigController {
             //如果节点存在，修改值
             zookeeperService.setData(path, value);
 
-            //刷新缓存
-            channelManager.messageChanged(configItem);
+            //通知对应的服务端配置项发生改变
+            notifyServerValueChanged(configItem);
+            //channelManager.messageChanged(configItem);
 
 
             return true;
@@ -74,6 +78,40 @@ public class ConfigController {
         }
 
 
+    }
+
+    /**
+     * 通知相应的configServer改变值
+     * @param configItem
+     */
+    private void notifyServerValueChanged(ConfigItem configItem) {
+
+        if (configItem == null) {
+            return;
+        }
+        String nodeServerPath = PathUtils.buildNodeServerMappingPath(configItem.getModule(),configItem.getSubModule(),configItem.getKey());
+
+
+        String serverAddress = zookeeperService.getData(nodeServerPath);
+
+        //服务器地址不为空
+        if (StringUtils.isNotEmpty(serverAddress)) {
+            String[] ipAndPort = StringUtils.split(serverAddress,":");
+            //do notify server
+            doNotifyServer(ipAndPort,configItem);
+        }
+    }
+
+    /**
+     * 建立socket连接，通知服务端消息改变
+     * @param ipAndPort
+     * @param configItem
+     */
+    private void doNotifyServer(String[] ipAndPort, ConfigItem configItem) {
+        log.info("start to notify server:{},value:{}", Arrays.toString(ipAndPort),configItem);
+
+        //通知Server配置项值发生改变
+        new ConfigNioClient(configItem,ipAndPort);
     }
 
     /**

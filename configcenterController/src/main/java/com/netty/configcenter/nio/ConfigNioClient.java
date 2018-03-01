@@ -1,13 +1,7 @@
 package com.netty.configcenter.nio;
 
-import com.netty.configcenter.cache.CacheManager;
-import com.netty.configcenter.config.ServerConfig;
-import com.netty.configcenter.context.ListenerContext;
-import com.netty.configcenter.event.ServerDisConnectEvent;
-import com.netty.configcenter.handler.ConfigClientHandler;
-import com.netty.configcenter.listener.MessageConfigListener;
+import com.netty.configcenter.handler.ConfigControllerHandler;
 import com.netty.configcenter.model.ConfigItem;
-import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -17,8 +11,8 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ConfigNioClient {
 
-    private CacheManager cacheManager;
-
     private ConfigItem configItem;
 
     private EventLoopGroup workerGroup;
@@ -39,33 +31,16 @@ public class ConfigNioClient {
 
     private Channel channel;
 
-    private ServerConfig serverConfig;
 
-    private ListenerContext listenerContext;
+    private String[] ipAndPort;
 
     private String zkHost = "localhost:2181";
 
 
-    public ConfigNioClient(ConfigItem configItem,CacheManager cacheManager) {
+    public ConfigNioClient(ConfigItem configItem,String[] ipAndPort) {
 
         this.configItem = configItem;
-
-        //缓存管理器实例化
-        this.cacheManager = cacheManager;
-
-        listenerContext = new ListenerContext();
-
-        listenerContext.addListener(new MessageConfigListener<ServerDisConnectEvent>() {
-            @Override
-            public void messageChanged(ServerDisConnectEvent event) {
-                if (log.isDebugEnabled()) {
-                    log.debug("reconnect server");
-                }
-                reConnect();
-            }
-        });
-
-        serverConfig = new ServerConfig(zkHost);
+        this.ipAndPort = ipAndPort;
 
         this.openAndConnect();
     }
@@ -117,7 +92,7 @@ public class ConfigNioClient {
 
                             ch.pipeline().addLast(
                                     new ObjectEncoder(),objectDecoder,
-                                    new ConfigClientHandler(configItem,cacheManager,listenerContext));
+                                    new ConfigControllerHandler(configItem));
                         }
                     });
 
@@ -131,23 +106,13 @@ public class ConfigNioClient {
      */
     private void doConnect() {
         try {
-            //sever形式为localhost:8082
-            String server = serverConfig.getValidServer();
 
-            if (StringUtils.isEmpty(server)) {
-
-                log.error("no config server found");
-                this.doClose();
-                return;
-            }
             if (log.isDebugEnabled()) {
-                log.debug("server info " + server);
+                log.debug("server info " + Arrays.toString(ipAndPort));
             }
-
-            String[] hostInfo = server.split(":");
 
             // Start the client.
-            ChannelFuture f = bootstrap.connect(hostInfo[0],Integer.parseInt(hostInfo[1]));
+            ChannelFuture f = bootstrap.connect(ipAndPort[0],Integer.parseInt(ipAndPort[1]));
 
             boolean ret = f.awaitUninterruptibly(3000, TimeUnit.MILLISECONDS);
 
@@ -155,24 +120,11 @@ public class ConfigNioClient {
                 channel = f.channel();
             }
 
-            //注册到zk上节点连接信息
-            registerZkNodeInfo(server);
-            // Wait until the connection is closed.
-            //f.channel().closeFuture().sync();
         } catch (Throwable e) {
             log.error("fail to connect Server." + e);
             workerGroup.shutdownGracefully();
         }
     }
-
-    /**
-     * 注册到zookeeper上节点连接信息
-     * @param server
-     */
-    private void registerZkNodeInfo(String server) {
-        serverConfig.registerZkNodeInfo(configItem,server);
-    }
-
 
     /**
      * 关闭client
@@ -190,11 +142,6 @@ public class ConfigNioClient {
                 workerGroup.shutdownGracefully();
             }
 
-            //发出事件关闭事件
-            listenerContext.fireClientClose();
-
-            //关闭zk
-            serverConfig.close();
         } catch (Throwable e) {
             log.error("fail to closeZk client. ",e);
         }
@@ -214,16 +161,6 @@ public class ConfigNioClient {
             log.error("fail to closeZk channel. ",e);
         }
     }
-
-
-    /**
-     * 添加监听器
-     * @param listener
-     */
-    public void addListener(MessageConfigListener listener) {
-        listenerContext.addListener(listener);
-    }
-
 
 
     /**

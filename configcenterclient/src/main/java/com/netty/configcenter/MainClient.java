@@ -13,27 +13,38 @@ import java.util.concurrent.TimeUnit;
  */
 public class MainClient {
     public static void main(String[] args) {
-        ConfigClient client = new ConfigClient("loan", "magina", "whiteList");
 
-        client.addListener(new MessageConfigListener<MessageChangedEvent>() {
+        for (int i=0;i< 1;i++) {
 
-           @Override
-           public void messageChanged(MessageChangedEvent event) {
-               System.out.println("listener:" + event.getMessage());
-           }
-       }
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ConfigClient client = new ConfigClient("loan", "magina", "whiteList");
 
-        );
+                    client.addListener(new MessageConfigListener<MessageChangedEvent>() {
 
-        System.out.println("config value:" + client.getValue());
+                                           @Override
+                                           public void messageChanged(MessageChangedEvent event) {
+                                               System.out.println("listener:" + event.getMessage());
+                                           }
+                                       }
 
+                    );
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+                    System.out.println("config value:" + client.getValue());
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                   // System.out.println("get config value again:" + client.getValue());
+                }
+            });
+            t.start();
+
         }
-        System.out.println("get config value again:" + client.getValue());
+
 
     }
 }

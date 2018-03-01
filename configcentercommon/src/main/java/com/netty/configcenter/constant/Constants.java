@@ -18,6 +18,11 @@ public class Constants {
      * 配置数据目录
      */
     public static final String PATH_CONFIG_DATA = "/config/center/data/configdata";
+
+    /**
+     * 节点和相应服务器连接映射目录
+     */
+    public static final String PATH_NODE_SERVER_MAPPING = "/config/center/data/node_server_mapping";
     /**
      * 服务器列表
      */

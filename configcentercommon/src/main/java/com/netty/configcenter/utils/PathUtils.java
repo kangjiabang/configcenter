@@ -19,4 +19,16 @@ public class PathUtils {
     public static String buildConfigData(String module,String subModule,String key) {
         return Constants.PATH_CONFIG_DATA + "/" + module + "/" + subModule +"/" + key;
     }
+
+
+    /**
+     * 构建存放的目录
+     * @param module
+     * @param subModule
+     * @param key
+     * @return
+     */
+    public static String buildNodeServerMappingPath(String module,String subModule,String key) {
+        return Constants.PATH_NODE_SERVER_MAPPING + "/" + module + "/" + subModule +"/" + key;
+    }
 }

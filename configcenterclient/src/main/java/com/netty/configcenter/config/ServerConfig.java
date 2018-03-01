@@ -1,6 +1,8 @@
 package com.netty.configcenter.config;
 
 import com.netty.configcenter.constant.Constants;
+import com.netty.configcenter.model.ConfigItem;
+import com.netty.configcenter.utils.PathUtils;
 import com.netty.configcenter.zookeeper.ZookeeperServiceClient;
 import org.springframework.util.CollectionUtils;
 
@@ -38,6 +40,18 @@ public class ServerConfig {
         return null;
     }
 
+
+    /**
+     * 注册到zookeeper上节点连接信息
+     * @param server
+     */
+    public void registerZkNodeInfo(ConfigItem configItem, String server) {
+        String nodeServerPath = PathUtils.buildNodeServerMappingPath(configItem.getModule(),
+                configItem.getSubModule(),configItem.getKey());
+        //递归创建节点
+        zookeeperService.createNodeRecursively(nodeServerPath,server);
+
+    }
 
     /**
      * 关闭zk

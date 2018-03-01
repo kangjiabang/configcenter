@@ -97,6 +97,12 @@ public class ConfigServerHandler extends SimpleChannelInboundHandler<Object> {
 
                 channelManager.addChannel(packet.getConfigItem(), ctx.channel());
             }
+            case OpCode.CONFIG_CHANGED: {
+
+                ConfigItem configItem = packet.getConfigItem();
+
+                channelManager.messageChanged(configItem);
+            }
         }
 
     }

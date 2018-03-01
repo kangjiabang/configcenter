@@ -168,6 +168,48 @@ public class ZookeeperServiceClient  {
     }
 
     /**
+     * 递归的创建持久化节点，如果父节点不存在，就创建
+     *
+     * @param path
+     * @param value
+     */
+    public void createNodeRecursively(String path, String value) {
+
+        // 例如：path：/config/center/data/serverlist
+        try {
+            String[] nodes = null;
+            if (path.startsWith("/")) {
+                //去掉节点前的"/"
+                path = path.substring(1);
+            }
+            //按照"/" 分割
+            nodes = path.split("/");
+
+            String pathToCreate = "";
+            for (int i = 0; i < nodes.length; i++) {
+                pathToCreate = pathToCreate + "/" + nodes[i];
+                //如果不存在，创建节点
+                if (zookeeper.exists(pathToCreate, false) == null) {
+                    //如果是最后一个节点，需要设置节点的值
+                    if (i == nodes.length - 1) {
+                        this.createNode(pathToCreate, value);
+                    } else {
+                        this.createNode(pathToCreate, "");
+                    }
+                }
+
+            }
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    /**
      * zk关闭
      */
     public void closeZk() {
